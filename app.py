@@ -126,24 +126,26 @@ REVERSE_PROXY_HTML = """
             align-items: center;
         }
         .container h1 {
-            font-size: 2.5em;
+            font-family: 'Roboto', monospace;
+            font-size: 2.0em;
             font-weight: bold;
-            margin-bottom: 3px; /* Reduced margin between heading and paragraph */
+            margin-bottom: 1px; /* Reduced margin between heading and paragraph */
         }
         .container p {
-            font-size: 1.2em;
-            margin-bottom: 25px;
+            font-size: 1.0em;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
         .container a {
             display: inline-block;
             background-color: #2a5f3f;
             color: white;
-            padding: 15px 30px;
+            padding: 5px 15px;
             font-size: 1.3em;
             text-decoration: underline; /* Underline the text */
             border-radius: 5px;
             border: 2px solid #255238;
-            width: 50%; /* Elongate the button */
+            width: 40%; /* Elongate the button */
             text-align: center; /* Ensure text is centered inside the elongated button */
             font-family: 'Roboto Mono', monospace; /* Change font to Roboto Mono */
         }
@@ -156,10 +158,11 @@ REVERSE_PROXY_HTML = """
     <div class="container">
         <h1>Human Verification</h1>
         <p>Verify below to be granted entry</p>
-        <a href="/">Click here</a>  <!-- Changed link to point to /api -->
+        <a href="/">Click here</a>
     </div>
 </body>
 </html>
+
 """
 
 @app.route('/verify', methods=['GET'])
