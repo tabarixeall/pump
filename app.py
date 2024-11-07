@@ -13,23 +13,54 @@ def proxy(path):
     headers = {key: value for key, value in request.headers if key.lower() != 'host'}
 
     # Handle different HTTP methods
-    if request.method == 'POST':
-        response = requests.post(url, headers=headers, data=request.data, cookies=request.cookies)
-    elif request.method == 'PUT':
-        response = requests.put(url, headers=headers, data=request.data, cookies=request.cookies)
-    elif request.method == 'DELETE':
-        response = requests.delete(url, headers=headers, cookies=request.cookies)
-    else:
-        response = requests.get(url, headers=headers, cookies=request.cookies)
+    try:
+        if request.method == 'POST':
+            response = requests.post(url, headers=headers, data=request.data, cookies=request.cookies)
+        elif request.method == 'PUT':
+            response = requests.put(url, headers=headers, data=request.data, cookies=request.cookies)
+        elif request.method == 'DELETE':
+            response = requests.delete(url, headers=headers, cookies=request.cookies)
+        else:
+            response = requests.get(url, headers=headers, cookies=request.cookies)
+    except requests.exceptions.RequestException as e:
+        return f"Error during proxy request: {e}", 500
 
     # Inject JavaScript for mobile keyboard handling
     injected_js = """
     <script>
-        // This function ensures input focus handling on mobile
-        document.addEventListener('focusin', (event) => {
-            if(event.target.tagName === 'INPUT') {
-                setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure input fields are scrolled into view on focus
+            document.addEventListener('focusin', (event) => {
+                if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                    setTimeout(() => {
+                        event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 200); // Delay to allow keyboard to appear
+                }
+            });
+
+            // Observe changes in the DOM and re-apply the focus handler to new input fields
+            const observer = new MutationObserver(() => {
+                const inputFields = document.querySelectorAll('input, textarea');
+                inputFields.forEach((input) => {
+                    input.addEventListener('focus', () => {
+                        setTimeout(() => {
+                            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 200);
+                    });
+                });
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Initialize the focus handler for existing input fields
+            const inputFields = document.querySelectorAll('input, textarea');
+            inputFields.forEach((input) => {
+                input.addEventListener('focus', () => {
+                    setTimeout(() => {
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 200);
+                });
+            });
         });
     </script>
     """
@@ -40,9 +71,10 @@ def proxy(path):
     else:
         content = response.content
 
-    # Exclude specific headers that could cause issues
+    # Exclude specific headers that could cause issues with the proxy response
     excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
     headers = [(name, value) for name, value in response.raw.headers.items() if name.lower() not in excluded_headers]
+    
     return Response(content, response.status_code, headers)
 
 if __name__ == '__main__':
