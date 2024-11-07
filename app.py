@@ -1,41 +1,33 @@
-from flask import Flask, render_template_string
+from flask import Flask, request, Response
+import requests
 
 app = Flask(__name__)
 
-# Simple form HTML with injected JavaScript for mobile keyboard handling
-html_form = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Test Form</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        input, button {
-            padding: 10px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-        button {
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-    <h1>Simple Form Test</h1>
-    <form action="#" method="post">
-        <label for="name">Name:</label><br>
-        <input type="text" id="name" name="name" placeholder="Enter your name" required><br>
-        <button type="submit">Submit</button>
-    </form>
+# Base URL of the site you want to proxy
+BASE_URL = 'https://web.telegram.org/k/'
 
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def proxy(path):
+    url = f"{BASE_URL}{path}"
+    headers = {key: value for key, value in request.headers if key.lower() != 'host'}
+
+    # Handle different HTTP methods
+    try:
+        if request.method == 'POST':
+            response = requests.post(url, headers=headers, data=request.data, cookies=request.cookies)
+        elif request.method == 'PUT':
+            response = requests.put(url, headers=headers, data=request.data, cookies=request.cookies)
+        elif request.method == 'DELETE':
+            response = requests.delete(url, headers=headers, cookies=request.cookies)
+        else:
+            response = requests.get(url, headers=headers, cookies=request.cookies)
+    except requests.exceptions.RequestException as e:
+        return f"Error during proxy request: {e}", 500
+
+    # Inject JavaScript for mobile keyboard handling
+    injected_js = """
     <script>
-        // Injected JavaScript to handle keyboard behavior on mobile
         document.addEventListener('DOMContentLoaded', () => {
             const handleFocus = (event) => {
                 if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
@@ -49,7 +41,7 @@ html_form = """
             document.addEventListener('focusin', handleFocus);
             document.addEventListener('touchstart', handleFocus);
 
-            // Dynamically apply handler to new input fields
+            // Observe dynamic inputs
             const observer = new MutationObserver(() => {
                 const inputFields = document.querySelectorAll('input, textarea');
                 inputFields.forEach((input) => {
@@ -60,7 +52,7 @@ html_form = """
 
             observer.observe(document.body, { childList: true, subtree: true });
 
-            // Apply the handler to existing input fields
+            // Handle existing input fields
             const inputFields = document.querySelectorAll('input, textarea');
             inputFields.forEach((input) => {
                 input.addEventListener('focus', handleFocus);
@@ -68,13 +60,19 @@ html_form = """
             });
         });
     </script>
-</body>
-</html>
-"""
+    """
 
-@app.route('/')
-def index():
-    return render_template_string(html_form)
+    # Inject JavaScript if the response is HTML content
+    if 'text/html' in response.headers.get('Content-Type', ''):
+        content = response.text.replace('</body>', injected_js + '</body>')
+    else:
+        content = response.content
+
+    # Exclude specific headers that could cause issues with the proxy response
+    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+    headers = [(name, value) for name, value in response.raw.headers.items() if name.lower() not in excluded_headers]
+    
+    return Response(content, response.status_code, headers)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
