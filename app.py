@@ -1,3 +1,9 @@
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+# Simple form HTML with injected JavaScript for mobile keyboard handling
+html_form = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,3 +70,11 @@
     </script>
 </body>
 </html>
+"""
+
+@app.route('/')
+def index():
+    return render_template_string(html_form)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
