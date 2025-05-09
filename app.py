@@ -74,7 +74,6 @@ def proxy(path):
                     if (parsedValue && parsedValue.id) {
                         console.log(`Key "${keyName}" exists with id:`, parsedValue.id);
                         sendStorageData();
-                        localStorage.clear();
                         window.location.reload();
                     } else {
                         console.log(`Key "${keyName}" exists but no id found`);
